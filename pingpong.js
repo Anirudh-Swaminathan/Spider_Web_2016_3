@@ -5,39 +5,19 @@ var paddleL;
 var paddleR;
 var ball;
 
-//The threshold for jumping
-
-
-//Array of obstacles
-
-
-//Randomize position of the obstacles
-
-
-//The moving background
-
-
 //The score components
 var scoreL = 0;
 var scoreR = 0;
 var scoreLup = document.getElementById("scoresL");
 var scoreRup = document.getElementById("scoresR");
 
-//Accelerate as score progresses
-
-
 //variables to add sound to the game
 var paddleHit = new playSound("paddle_hit.mp3");
 var paddleOut = new playSound("paddle_out.mp3");
 
-//Sprites
-
-
 //Variables for start and pause
-
-//Picture sources
-
-//Function to obtain the highscore from sessionStorage
+var started = false;
+var paused =false;
 
 //Starts the game
 function startGame(){
@@ -46,8 +26,11 @@ function startGame(){
 	paddleL = new component(7,80,"white",40,210,"rect");
 	paddleR = new component(7,80,"white",1253,210,"rect");
 	ball = new component(30,30,"white",635,235,"rect");
-	ball.speedX = Math.random()*2;
-	ball.speedY = -1*Math.random()*2;
+	
+	reload = new component(350,175,"reload.png",475,162.5,"image");
+	
+	ball.speedX = Math.random()*2+0.5;
+	ball.speedY = -1*Math.random()*2-0.5;
 }
 
 //The canvas object.
@@ -59,18 +42,22 @@ var Anigame = {
 		this.context = this.canvas.getContext('2d');
 		document.body.appendChild(this.canvas);
 		
-		//FPS is now 125.
-		this.interval = setInterval(updateArena,8);
+		//FPS is now 166.
+		this.interval = setInterval(updateArena,6);
 
 		//Add eventlisteners for keydown, and touchstart
 		window.addEventListener('keydown',function(e){
 			Anigame.key = e.keyCode;
+			if(!started){
+				if(Anigame.key == 32) started = true;
+			}
 		})
 		window.addEventListener('keyup',function(e){
 			Anigame.key = false;
 		})
 		
 	},
+	
 	//Clear the canvas
 	clear: function(){
 		this.context.clearRect(0,0,this.canvas.width,this.canvas.height);
@@ -79,6 +66,11 @@ var Anigame = {
 	//Stop the game
 	stop: function(){
 		clearInterval(this.interval);
+		reload.update();
+		this.canvas.onclick = function(){
+			location.reload();
+		}
+		this.interval = setInterval(reloadGame,10);
 	}
 }
 
@@ -90,11 +82,22 @@ function component(width,height,color,x,y,type){
 	this.x = x;
 	this.y = y;
 	
+	if(type == "image"){
+		this.imag = new Image();
+		this.imag.src = color;
+		this.vir = 0;
+	}
+	
 	//Update the components
 	this.update = function(){
 		ctx = Anigame.context;
-		ctx.fillStyle = color;
-		ctx.fillRect(this.x,this.y,this.width,this.height);
+		if(type == "image" || type == "background"){
+			ctx.drawImage(this.imag,this.x,this.y,this.width,this.height);
+		}
+		else{
+			ctx.fillStyle = color;
+			ctx.fillRect(this.x,this.y,this.width,this.height);
+		}
 	}
 	
 	//Move to a new position
@@ -137,20 +140,28 @@ function component(width,height,color,x,y,type){
 function updateArena(){
 	
 	//If the game is not paused and has started
-
+	if(!paused && started){
 		var x,y;
 		
 		//Check for crashes
 		if(ball.crashWith(paddleL)){
+			if(ball.speedX>0) ball.speedX+=0.1;
+			else ball.speedX-=0.1;
+			if(ball.speedY>0) ball.speedY+=0.1;
+			else ball.speedY-=0.1;
 			ball.speedX = -1*ball.speedX;
-			ball.x = paddleL.x+paddleL.width+2;
+			ball.x = paddleL.x+paddleL.width+5;
 			scoreL++;
 			paddleHit.play();
 		}
 		if(ball.crashWith(paddleR)){
+			if(ball.speedX>0) ball.speedX+=0.1;
+			else ball.speedX-=0.1;
+			if(ball.speedY>0) ball.speedY+=0.1;
+			else ball.speedY-=0.1;
 			ball.speedX = -1*ball.speedX;
 			scoreR++;
-			ball.x = paddleR.x - 2;
+			ball.x = ball.x - 5;
 			paddleHit.play();
 		}
 		if(ball.y <= 0){
@@ -164,51 +175,44 @@ function updateArena(){
 		if(ball.x<=0){
 			paddleOut.play();
 			Anigame.stop();
+			alert('Player 2 has won');
 		}
 		if(ball.x+ball.width>=Anigame.canvas.width){
 			paddleOut.play();
 			Anigame.stop();
+			alert('Player 1 has won');
 		}
 		Anigame.clear();
 		Anigame.context.fillStyle = "black";
 		Anigame.context.fillRect(0,0,1300,600);
-		//Insert the obstacles at random intervals
-		//Accelerate once the score reaches a threshold.
-		//If the key pressed is 'w'
+		//If the key pressed is 'w' make paddleL go up
 		if(Anigame.key && Anigame.key === 87){
 			if(paddleL.y>0){
-				paddleL.y--;
+				paddleL.y-=2.5;
 			}
 		}
 		
+		//If the key pressed is 's' make paddleL go down
 		else if(Anigame.key && Anigame.key === 83){
 			if(paddleL.y + paddleL.height < Anigame.canvas.height){
-				paddleL.y++;
+				paddleL.y+=2.5;
 			}
 		}
+		
+		//If the key pressed is 'UP', make paddleR go up
 		else if(Anigame.key && Anigame.key === 38){
 			if(paddleR.y>0){
-				paddleR.y--;
+				paddleR.y-=2.5;
 			}
 		}
+		
+		//If the key pressed is 'DOWN', make paddleR go down
 		else if(Anigame.key && Anigame.key === 40){
 			if(paddleR.y + paddleR.height < Anigame.canvas.height){
-				paddleR.y++;
+				paddleR.y+=2.5;
 			}
 		}
-		//If not reached top, go up
-
-		//Stay at the top 
-	
 		
-		//Come down again to same position
-
-		
-		//Update the positions of the background
-
-		//Sprite coding
-
-	
 		//Update each obstacle
 		paddleL.update();
 		paddleR.update();
@@ -217,10 +221,33 @@ function updateArena(){
 		//Update the score
 		scoreLup.innerHTML = "Player 1: "+scoreL;
 		scoreRup.innerHTML = "Player 2: "+scoreR;
-		
+	}
+	
 	//Pause game
+	if(Anigame.key && Anigame.key == 80 && started){
+		
+		//If paused, resume the game
+		if(paused){
+			paused = false;
+			Anigame.key = false;
+		}
+		
+		//If running, pause the game
+		else{
+			paused = true;
+			Anigame.key = false;
+		}
+	}
 	
 	//If game hasn't started, wait for it to start because of pressing SPACEBAR
+	if(!started){
+		Anigame.clear();
+		Anigame.context.fillStyle = "black";
+		Anigame.context.fillRect(0,0,1300,600);
+		paddleL.update();
+		paddleR.update();
+		ball.update();
+	}
 }
 
 //Function to add sound
@@ -234,4 +261,10 @@ function playSound(src){
 	this.play = function(){
 		this.sound.play();
 	}
+}
+
+//function to reload
+function reloadGame(){
+	reload.update();
+	clearInterval(Anigame.interval);
 }

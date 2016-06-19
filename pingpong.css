@@ -8,17 +8,23 @@ a:hover{
 }
 /* Center the developers name(Anirudh Swaminathan) */
 #creator{
-	position:relative;
+	position:absolute;
 	line-height:12px;
 	vertical-align:middle;
+	top:35.25em;
+	left:32em;
 }
 #scoresL{
-	position:relative;
-	top:3em;
-	left:3.125em;
+	position:absolute;
+	top:2.3em;
+	left:2.125em;
 }
 #scoresR{
-	position:relative;
-	top:2em;
+	position:absolute;
+	top:2.3em;
 	left:75em;
+}
+canvas{
+	top:-1em;
+	position:relative;
 }
